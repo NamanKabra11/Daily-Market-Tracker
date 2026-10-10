@@ -14,11 +14,15 @@ market brief and rule-based stock calls, each tracked against the Nifty 50.
   stop/target level (gap-aware), held through results, post-mortem on every close.
 - **Benchmarked** against the Nifty 50 over the same period.
 
+## What's inside
+- `SKILL.md`: the method (story selection, call rules, entry/stop/gap rules, scoring)
+- `assets/dashboard.html`: the ledger dashboard (Today, Call ledger, Review)
+- `assets/pdf-lib.min.js`: splits newspaper PDFs over 20 MB
+- `references/`: templates for the hourly price tracker and the morning paper reader
+
 ## Install
-1. Download `morning-ledger-skill.zip`.
-2. In Claude: Settings → Capabilities → Skills → Upload skill.
-3. Share any business news in any chat.
+1. Download `daily-market-ledger-skill.zip` from **Releases** (right side of this page).
+2. In Claude: Settings → Capabilities → Skills → Upload skill → choose the zip.
+3. Share a business paper, photo, link or article text in a chat. Claude asks before creating your ledger.
 
-Paper trading for learning only. Not investment advice.
-
-Built by Naman Kabra
+*Paper trading for learning. Not investment advice.*
