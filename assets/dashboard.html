@@ -1,0 +1,599 @@
+<title>Daily Market Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F6F4EF;--bar:#FBFAF7;--card:#FFFFFF;--ink:#15171C;--ink2:#2E3138;--muted:#5B5F68;--faint:#8A8D94;
+  --line:#E3E0D8;--line2:#ECE9E1;--wash:#F0EDE6;--dash:#B4AE9F;
+  --up:#1F5FBF;--upText:#15457F;--upBg:#E6EEF9;--dn:#C2610F;--dnText:#8A3D08;--dnBg:#FBEBDD;--flatBg:#EFEDE7;
+  --invBg:#15171C;--invInk:#F6F4EF;--invMuted:#C9CCD2;
+  --serif:Newsreader,Georgia,'Times New Roman',serif;--sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--ground:#141518;--bar:#1A1C20;--card:#1E2025;--ink:#ECEAE4;--ink2:#D3D1CB;--muted:#A3A6AD;--faint:#80838A;
+  --line:#2E3036;--line2:#282A2F;--wash:#2A2C31;--dash:#4A4C52;
+  --up:#6E9FE8;--upText:#9CBDF0;--upBg:#1D2B42;--dn:#E08A45;--dnText:#EDAA72;--dnBg:#3A2618;--flatBg:#2A2C31;
+  --invBg:#ECEAE4;--invInk:#15171C;--invMuted:#3B3E45;}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--ground:#141518;--bar:#1A1C20;--card:#1E2025;--ink:#ECEAE4;--ink2:#D3D1CB;--muted:#A3A6AD;--faint:#80838A;
+  --line:#2E3036;--line2:#282A2F;--wash:#2A2C31;--dash:#4A4C52;
+  --up:#6E9FE8;--upText:#9CBDF0;--upBg:#1D2B42;--dn:#E08A45;--dnText:#EDAA72;--dnBg:#3A2618;--flatBg:#2A2C31;
+  --invBg:#ECEAE4;--invInk:#15171C;--invMuted:#3B3E45;}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+button,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--up);outline-offset:2px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.wrap{max-width:1360px;margin:0 auto;padding-inline:clamp(16px,4vw,56px)}
+
+header.top{background:var(--bar);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.brand b{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.01em}
+.brand span{font-size:14px;color:var(--muted)}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap}
+nav.tabs button{min-height:44px;padding:0 18px;border-radius:8px;border:0;background:transparent;font-size:14px;font-weight:500}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--ground)}
+
+main{padding-block:24px 64px;display:flex;flex-direction:column;gap:24px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px}
+.note{border:1px dashed var(--dash);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--muted)}
+
+/* Today */
+.dayhead{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
+.dayhead h1{margin:0;font-family:var(--serif);font-weight:500;font-size:clamp(28px,4vw,40px);text-wrap:balance}
+.dayhead label{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.dayhead select{min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:0 10px}
+.pulse{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.pulse .panel{padding:14px 16px;display:flex;flex-direction:column;gap:4px;border-radius:10px}
+.pulse .v{font-size:20px;font-weight:500}
+.pulse .c{font-size:12px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:36px;align-items:start}
+@media (max-width:1060px){.cols{grid-template-columns:minmax(0,1fr)}}
+.stack{display:flex;flex-direction:column;gap:18px}
+.story{padding:24px 28px;display:flex;flex-direction:column;gap:12px}
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.meta .cat{font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.story h2{margin:0;font-family:var(--serif);font-size:clamp(21px,2.4vw,26px);font-weight:500;line-height:1.22;text-wrap:balance}
+.story p{margin:0;color:var(--ink2);max-width:72ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:500;padding:5px 10px;border-radius:999px}
+.chip.up{background:var(--upBg);color:var(--upText)}.chip.dn{background:var(--dnBg);color:var(--dnText)}.chip.flat{background:var(--flatBg);color:var(--muted)}
+.more{border-top:1px solid var(--line2);padding-top:16px;display:flex;flex-direction:column;gap:12px}
+.more .full{font-family:var(--serif);font-size:17px;line-height:1.65;color:var(--ink2);max-width:70ch;white-space:pre-line}
+.why{background:var(--ground);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.linkbtn{align-self:flex-start;min-height:44px;border:0;background:transparent;color:var(--up);font-weight:500;font-size:14px;padding:0}
+.inside .row{padding:18px 24px;border-bottom:1px solid var(--line2);display:grid;grid-template-columns:120px minmax(0,1fr) 130px;gap:20px;align-items:start}
+.inside .row:last-child{border-bottom:0}
+.inside h3{margin:0;font-family:var(--serif);font-size:19px;font-weight:500;line-height:1.3}
+.inside .brief{font-size:14px;color:var(--ink2)}
+.inside .imp{font-size:12px;font-weight:500;text-align:right;padding-top:3px}
+@media (max-width:700px){.inside .row{grid-template-columns:1fr;gap:6px}.inside .imp{text-align:left}}
+.t-up{color:var(--upText)}.t-dn{color:var(--dnText)}.t-flat{color:var(--muted)}
+.read{background:var(--invBg);color:var(--invInk);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.read .eyebrow{color:var(--invMuted)}
+.read .line{font-family:var(--serif);font-size:22px;line-height:1.35}
+.read .body{font-size:14px;line-height:1.65;white-space:pre-line;opacity:.88}
+.sectors{padding:22px 24px;display:flex;flex-direction:column;gap:14px}
+.srow{display:grid;grid-template-columns:120px minmax(0,1fr) 72px;gap:12px;align-items:center;font-size:14px}
+.sbar{height:8px;background:var(--wash);border-radius:4px;position:relative}
+.sbar i{position:absolute;top:0;height:8px;border-radius:4px}
+.sbar b{position:absolute;left:50%;top:-3px;width:1px;height:14px;background:var(--dash)}
+.callcard{padding:20px 22px;display:flex;flex-direction:column;gap:12px}
+.callcard .h{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.callcard .stock{font-family:var(--serif);font-size:20px;font-weight:500}
+.dir{font-size:12px;font-weight:600;padding:4px 9px;border-radius:6px;white-space:nowrap}
+.dir.LONG{background:var(--upBg);color:var(--upText)}.dir.SHORT{background:var(--dnBg);color:var(--dnText)}.dir.AVOID{background:var(--flatBg);color:var(--ink2)}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;font-size:12px}
+.kv div{display:flex;flex-direction:column;gap:2px}.kv span:first-child{color:var(--muted)}
+.actions{display:flex;gap:8px}
+.btn{min-height:44px;padding:0 18px;border-radius:8px;border:1px solid var(--line);background:var(--card);font-size:14px;font-weight:500}
+.btn.primary{background:var(--ink);color:var(--ground);border-color:var(--ink);flex-grow:1}
+.status{font-size:13px;font-weight:500}
+
+/* Ledger */
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters button{min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:1180px;font-size:14px}
+th{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-align:left;padding:14px 12px;background:var(--bar);border-bottom:1px solid var(--line)}
+td{padding:16px 12px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th.r,td.r{text-align:right}
+td .sub{font-size:12px;color:var(--muted)}
+td.trig{font-size:13px;color:var(--ink2);max-width:320px}
+tr.clickable{cursor:pointer}tr.clickable:hover td{background:var(--ground)}
+.detail td{background:var(--ground);font-size:14px}
+.detail .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+
+/* Review */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.kpis .panel{padding:20px 22px;display:flex;flex-direction:column;gap:6px}
+.kpis .v{font-size:30px;font-weight:500}
+.kpis .n{font-size:13px;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:24px;align-items:start}
+@media (max-width:1060px){.two{grid-template-columns:minmax(0,1fr)}}
+.chartp{padding:24px 28px;display:flex;flex-direction:column;gap:14px}
+.chartp h2,.lessons h2{margin:0;font-family:var(--serif);font-size:22px;font-weight:500}
+.legend{display:flex;gap:18px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.legend span{display:flex;gap:8px;align-items:center}.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.lessons{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.lesson{padding:22px 24px;display:flex;flex-direction:column;gap:10px}
+.lesson h3{margin:0;font-family:var(--serif);font-size:20px;font-weight:500;line-height:1.3}
+.lesson p{margin:0;font-size:14px;color:var(--ink2)}
+
+.empty{padding:40px clamp(20px,4vw,48px);display:flex;flex-direction:column;gap:20px}
+.empty h2{margin:0;font-family:var(--serif);font-weight:500;font-size:clamp(26px,3.4vw,34px);text-wrap:balance}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.steps div{border-top:2px solid var(--ink);padding-top:12px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink2)}
+.steps b{font-size:15px;color:var(--ink)}
+.upload{padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+.upgrid{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:stretch}
+@media (max-width:640px){.upgrid{grid-template-columns:1fr}}
+.drop{position:relative;border:1.5px dashed var(--dash);border-radius:10px;padding:22px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;justify-content:center;cursor:pointer;color:var(--ink);min-height:120px}
+.drop:hover,.drop.over{border-color:var(--up);background:var(--upBg)}
+.drop:focus-within{outline:2px solid var(--up);outline-offset:2px}
+.sub{font-size:12px;color:var(--muted)}
+input[type=date]{min-height:44px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);padding:0 10px;font:inherit}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.pending{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.pending li{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.uprow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 16px;align-items:center;padding:8px 0;font-size:14px}
+.live{padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+.livehead{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;align-items:baseline}
+.livegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.livegrid>div{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:var(--ground);border-radius:8px;min-width:0}
+.livegrid .v{font-size:18px;font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--up);display:inline-block;margin-right:6px;vertical-align:middle}
+.livewarn{font-size:13px;color:var(--dnText);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:12px 18px;border-radius:8px;font-size:14px;z-index:10}
+@media (prefers-reduced-motion:no-preference){.story,.callcard{transition:border-color .15s}}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="brand"><b>Daily Market Ledger</b><span id="sub">The news, read for the market</span></div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-today" aria-selected="true" data-tab="today">Today</button>
+    <button role="tab" id="tab-calls" aria-selected="false" data-tab="calls">Call ledger</button>
+    <button role="tab" id="tab-review" aria-selected="false" data-tab="review">Review</button>
+    <button id="hdrUpload" class="btn" style="margin-left:8px">Upload paper</button>
+  </nav>
+</div></header>
+<main class="wrap" id="app"><div class="note">Loading…</div></main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const todayIST=()=>{try{return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'})}catch(e){return new Date().toISOString().slice(0,10)}};
+const S={tab:'today',day:null,days:[],calls:[],lessons:[],uploads:[],open:{},filter:'All',expanded:null,canEdit:false,db:null,assets:null,ready:false,offline:false,pending:[],upDate:todayIST(),busy:false,upMsg:''};
+const MAXB=20*1024*1024;
+const ACCEPT=['application/pdf','image/jpeg','image/png','image/webp'];
+const mb=b=>(b/1048576).toFixed(b<10485760?1:0)+' MB';
+const $app=document.getElementById('app');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>typeof v==='number'&&isFinite(v);
+const fmtPx=v=>num(v)?v.toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:v<100?2:0}):'—';
+const pct=v=>num(v)?(v>=0?'+':'−')+Math.abs(v*100).toFixed(1)+'%':'—';
+const tone=v=>!num(v)?'t-flat':v>0?'t-up':v<0?'t-dn':'t-flat';
+const fmtDate=d=>{if(!d)return'';const t=new Date(d+'T00:00:00');return isNaN(t)?esc(d):t.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})};
+const short=d=>{if(!d)return'—';const t=new Date(d+'T00:00:00');return isNaN(t)?esc(d):t.toLocaleDateString('en-IN',{day:'numeric',month:'short'})};
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2400)}
+try{const t=localStorage.getItem('ml-tab');if(t)S.tab=t}catch(e){}
+
+/* ---- call maths ---- */
+const CLOSED=['Target hit','SL hit','Expired'];
+/* ---- live prices (Bigdata.com via the viewer's connector) ---- */
+const BD='Bigdata.com';
+const BDID={}; /* optional symbol→Bigdata.com entity id fallbacks; calls normally carry bdId */
+const MKT=[['Nifty 50','^NSEI'],['Sensex','^BSESN'],['USD/INR','USDINR'],['Brent ($/bbl)','BZUSD'],['BTC/USD','BTCUSD']];
+S.live={};S.mkt=null;S.liveErr=null;S.mcp=null;S.mcpTried=false;S.watches={};
+const symOf=c=>(c.symbol||'').toUpperCase();
+const bdId=c=>c.bdId||BDID[symOf(c)]||null;
+const MON={January:0,February:1,March:2,April:3,May:4,June:5,July:6,August:7,September:8,October:9,November:10,December:11};
+function asOfTs(t){const m=/(\w+) (\d{1,2}), (\d{4})(?: (\d{1,2}):(\d{2}) (AM|PM))?/.exec(t);if(!m||!(m[1] in MON))return null;let h=m[4]?(+m[4])%12:0;if(m[6]==='PM')h+=12;return Date.UTC(+m[3],MON[m[1]],+m[2],h,m[5]?+m[5]:0)}
+function payloadOf(r){if(!r)return null;if(r.payload!=null)return r.payload;const t=(r.content||[]).find(b=>b.type==='text');return t?t.text:null}
+function parseQuote(p){
+  if(typeof p==='string'){try{p=JSON.parse(p)}catch(e){return null}}
+  if(Array.isArray(p))p=p[0];
+  const o=p&&p.company_overview;if(!o||!num(o.price))return null;
+  const ts=o.timestamp?Date.parse(o.timestamp):NaN;
+  return{price:o.price,day:num(o.change_percentage)?o.change_percentage/100:null,ts:isNaN(ts)?null:ts};
+}
+function parseMarket(p){
+  if(typeof p!=='string')return null;
+  const out={};let asOf=null;
+  for(const raw of p.split('\n')){const line=raw.trim();
+    const m=/^\*As of (.+?)\*$/.exec(line);if(m){asOf=asOfTs(m[1]);continue}
+    if(line[0]!=='|')continue;
+    const cells=line.split('|').map(x=>x.trim());
+    for(const [name,tk] of MKT){if(cells[2]===tk&&!out[name]){const v=parseFloat((cells[3]||'').replace(/,/g,''));if(isFinite(v))out[name]={value:v,ts:asOf}}}
+  }
+  return Object.keys(out).length?out:null;
+}
+const AUTHZ=['needs_reauth','server_not_connected','selection_required','blocked_by_policy','approval_required','not_in_manifest','not_granted','capability_disabled','capability_removed'];
+let _rt=0;function soon(){clearTimeout(_rt);_rt=setTimeout(render,120)}
+function onLive(key,ev){
+  if(ev.type==='data'){
+    const p=payloadOf(ev.result);
+    if(key==='_mkt'){const m=parseMarket(p);if(m)S.mkt=m}else{const q=parseQuote(p);if(q)S.live[key]=q}
+    if(S.liveErr==='stale')S.liveErr=null;
+  }else{
+    const code=(ev.error&&ev.error.code)||'upstream_error';
+    if(AUTHZ.includes(code)){S.live={};S.mkt=null;S.liveErr=code}
+    else if(!S.liveErr)S.liveErr='stale';
+  }
+  soon();
+}
+function syncWatches(){
+  if(!S.mcp)return;
+  const want={};
+  S.calls.filter(c=>!CLOSED.includes(c.status)).forEach(c=>{const id=bdId(c);if(id)want[symOf(c)]=id});
+  for(const [sym,id] of Object.entries(want)){
+    if(S.watches[sym])continue;
+    S.watches[sym]=S.mcp.watchTool(BD,'bigdata_company_tearsheet',{rp_entity_id:id,company_type:'Public',sections:['company_overview']},ev=>onLive(sym,ev),{refetchInterval:300000});
+  }
+  if(!S.watches._mkt)S.watches._mkt=S.mcp.watchTool(BD,'bigdata_market_tearsheet',{},ev=>onLive('_mkt',ev),{refetchInterval:300000});
+}
+function restartWatches(){Object.values(S.watches).forEach(u=>{try{u()}catch(_){}});S.watches={};syncWatches()}
+async function allowLive(btn){
+  if(!S.mcp)return;if(btn)btn.disabled=true;
+  try{const r=await S.mcp.callTool(BD,'bigdata_market_tearsheet',{});const m=parseMarket(payloadOf(r));if(m)S.mkt=m;S.liveErr=null;restartWatches()}
+  catch(e){S.liveErr=(e&&e.code)||'upstream_error';if(!AUTHZ.includes(S.liveErr))S.liveErr='stale'}
+  render();
+}
+const istStamp=(d,t)=>{if(!d)return null;const x=Date.parse(d+'T'+(/^\d\d:\d\d$/.test(t||'')?t:'15:30')+':00+05:30');return isNaN(x)?null:x};
+const fmtT=ts=>{if(!ts)return'';try{return new Date(ts).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',weekday:'short',hour:'numeric',minute:'2-digit'})}catch(e){return''}};
+function eff(c){
+  const q=S.live[symOf(c)];const stored=istStamp(c.lastDate,c.lastTime);
+  if(q&&!CLOSED.includes(c.status)&&q.ts&&(!stored||q.ts>stored)){const n=S.mkt&&S.mkt['Nifty 50'];return{last:q.price,niftyLast:n?n.value:c.niftyLast,ts:q.ts,live:true,day:q.day}}
+  return{last:c.last,niftyLast:c.niftyLast,ts:stored,live:false,day:null};
+}
+function perf(c){
+  const E=eff(c);
+  const e=c.entry,l=E.last;if(!num(e)||!num(l)||e<=0)return{ret:null,alpha:null,nifty:null};
+  const s=l/e-1;const n=(num(c.niftyEntry)&&num(E.niftyLast)&&c.niftyEntry>0)?E.niftyLast/c.niftyEntry-1:null;
+  const long=c.dir==='LONG';const ret=long?s:-s;
+  const alpha=n==null?null:(long?s-n:n-s);
+  return{ret,alpha,nifty:n,stock:s};
+}
+function statusTone(s){return s==='Target hit'?'t-up':s==='SL hit'?'t-dn':s==='Open'?'':'t-flat'}
+
+/* ---- render ---- */
+function render(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===S.tab)));
+  if(!S.ready){$app.innerHTML='<div class="note">Loading…</div>';return}
+  if(S.offline){$app.innerHTML='<div class="note">This view can’t reach the ledger’s data right now. Reload the page to try again.</div>';return}
+  $app.innerHTML=S.tab==='today'?today():S.tab==='calls'?ledger():review();
+}
+
+function uploadPanel(){
+  const recent=S.uploads.slice().sort((a,b)=>(b._id||'').localeCompare(a._id||'')).slice(0,5);
+  const stTone=s=>s==='Done'?'t-up':s==='Failed'?'t-dn':'t-flat';
+  const list=recent.map(u=>`<div class="uprow"><span class="num">${fmtDate(u._id)}</span><span class="sub">${(u.files||[]).length} file${(u.files||[]).length===1?'':'s'}</span><span class="status ${stTone(u.status)}">${esc(u.status==='Waiting'?'Waiting to be read':u.status||'Waiting to be read')}</span>${u.note?`<span class="sub" style="grid-column:1/-1">${esc(u.note)}</span>`:''}</div>`).join('');
+  if(!S.assets){
+    const why=S.assetsState==='denied'?'File uploads were declined for this page. Turn them back on from this page’s permissions.':
+      S.canEdit===false?'This view is read-only, so uploads are off.':
+      'This app view can’t upload files. Open the dashboard in Safari or Chrome (claude.ai) on your phone or tablet and upload there.';
+    return `<section class="panel upload" id="upload"><span class="eyebrow">Upload the paper</span>
+      <div class="livewarn" style="color:var(--ink2)"><span>${esc(why)}</span>${S.assetsState==='denied'?'<button class="btn" data-perms>Open permissions</button>':''}</div>
+      <span class="sub">Diagnostics: uploads ${esc(S.assetsState||'unknown')} · edit access ${S.canEdit?'yes':'no'}</span>
+      ${list?`<div style="display:flex;flex-direction:column;border-top:1px solid var(--line2);padding-top:8px">${list}</div>`:''}</section>`;
+  }
+  const pend=S.pending.map((f,i)=>`<li><span>${esc(f.name)}</span><span class="num sub">${mb(f.size)}</span><button class="linkbtn" data-unpend="${i}" aria-label="Remove ${esc(f.name)}" style="min-height:32px;font-size:13px">Remove</button></li>`).join('');
+  return `<section class="panel upload" id="upload">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline"><span class="eyebrow">Upload the paper</span><span class="sub">Read by your morning task, or share the paper in chat</span></div><div class="sub" style="margin-top:-6px">On a phone or tablet, upload from Safari or Chrome (claude.ai). The Claude app doesn’t open file pickers inside dashboards.</div>
+    <div class="upgrid">
+      <label class="drop" id="drop" for="upfile">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"></path></svg>
+        <b>Drop the e-paper PDF or page photos here</b><span class="sub">or select files · PDF, JPG, PNG · large PDFs are split automatically</span>
+        <input type="file" id="upfile" multiple accept="application/pdf,.pdf,image/*" style="margin-top:8px;max-width:100%;font-size:14px">
+      </label>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <label for="update" class="sub" style="display:flex;flex-direction:column;gap:6px">Edition date<input type="date" id="update" value="${esc(S.upDate)}" max="${todayIST()}"></label>
+        <button class="btn primary" id="upgo" ${S.pending.length&&!S.busy&&!S.splitting?'':'disabled'}>${S.busy?'Uploading…':S.splitting?'Splitting…':'Upload '+(S.pending.length?S.pending.length+' file'+(S.pending.length>1?'s':''):'')}</button>
+      </div>
+    </div>
+    ${pend?`<ul class="pending">${pend}</ul>`:''}
+    ${S.upMsg?`<div class="sub" role="status">${esc(S.upMsg)}</div>`:''}
+    ${list?`<div style="display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line2);padding-top:8px">${list}</div>`:''}
+  </section>`;
+}
+const EXT={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp'};
+function fileType(f){if(ACCEPT.includes(f.type))return f.type;const m=/\.([a-z0-9]+)$/i.exec(f.name||'');return m&&EXT[m[1].toLowerCase()]||''}
+let _pdfLib=null;
+function loadPdfLib(){
+  if(window.PDFLib)return Promise.resolve(window.PDFLib);
+  if(_pdfLib)return _pdfLib;
+  _pdfLib=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='pdf-lib.min.js';sc.onload=()=>window.PDFLib?res(window.PDFLib):rej(new Error('PDF tool did not load'));sc.onerror=()=>{_pdfLib=null;rej(new Error('PDF tool could not load; check your connection'))};document.head.appendChild(sc)});
+  return _pdfLib;
+}
+async function splitPdf(f){
+  const P=await loadPdfLib();
+  const src=await P.PDFDocument.load(await f.arrayBuffer(),{ignoreEncryption:true});
+  const n=src.getPageCount(),out=[],base=(f.name||'paper').replace(/\.pdf$/i,'');
+  const per=Math.max(1,Math.floor(n*18*1048576/f.size));let i=0;
+  while(i<n){
+    let k=Math.min(per,n-i),bytes;
+    for(;;){
+      const d=await P.PDFDocument.create();
+      const pages=await d.copyPages(src,Array.from({length:k},(_,j)=>i+j));
+      pages.forEach(pg=>d.addPage(pg));
+      bytes=await d.save({useObjectStreams:true});
+      if(bytes.length<=MAXB-524288||k===1)break;
+      k=Math.max(1,Math.floor(k/2));
+    }
+    if(bytes.length>MAXB)throw new Error('page '+(i+1)+' on its own is over 20 MB');
+    const part=new File([bytes],base+'_p'+(i+1)+'-'+(i+k)+'.pdf',{type:'application/pdf'});part._t='application/pdf';
+    out.push(part);i+=k;
+  }
+  return out;
+}
+async function addFiles(fl){
+  const bad=[],big=[];
+  for(const f of Array.from(fl)){
+    f._t=fileType(f);
+    if(!f._t){bad.push(f.name+' is not a PDF or image');continue}
+    if(f.size>MAXB){if(f._t==='application/pdf'){big.push(f);continue}bad.push(f.name+' is '+mb(f.size)+'; photos must be under 20 MB');continue}
+    S.pending.push(f);
+  }
+  S.upMsg=bad.join('. ');render();
+  for(const f of big){
+    S.splitting=true;S.upMsg='Splitting '+f.name+' ('+mb(f.size)+') into parts under 20 MB…';render();
+    try{const parts=await splitPdf(f);parts.forEach(p=>S.pending.push(p));S.upMsg='Split '+f.name+' into '+parts.length+' parts. Tap Upload when ready.'}
+    catch(e){S.upMsg='Couldn’t split '+f.name+': '+((e&&e.message)||'unknown error')+'.'}
+    S.splitting=false;render();
+  }
+}
+async function doUpload(){
+  if(!S.pending.length||S.busy||!S.assets||!S.db)return;
+  const date=S.upDate||todayIST();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){S.upMsg='Pick the edition date first.';render();return}
+  S.busy=true;S.upMsg='';render();
+  const done=[];const failed=[];const failedFiles=[];
+  for(const f of S.pending){
+    try{const r=await S.assets.upload(f,{type:f._t||fileType(f)});done.push({id:r.id,name:f.name,size:r.sizeBytes,type:r.contentType})}
+    catch(e){failedFiles.push(f);const c=e&&e.code;failed.push(f.name+(c==='too_large'?' (over 20 MB)':c==='quota_or_state'?' (storage full)':c==='rate_limited'?' (too many uploads, wait a minute)':c==='not_granted'?' (upload permission was declined; reload and allow it)':c==='unsupported_type'?' (file type not accepted)':c==='store_unavailable'?' (temporary error, try again)':' ('+esc((e&&(e.code||e.message))||'unknown error')+')'))}
+  }
+  if(done.length){
+    try{
+      const ref=S.db.doc('uploads/'+date);const snap=await ref.get();
+      const prev=snap.exists?(snap.data().files||[]):[];
+      await ref.set({date,files:prev.concat(done),status:'Waiting',note:'',uploadedAt:new Date().toISOString()});
+    }catch(e){failed.push('the upload record (try again)')}
+  }
+  S.pending=failedFiles;
+  S.busy=false;
+  S.upMsg=(done.length?`Uploaded ${done.length} file${done.length>1?'s':''} for ${fmtDate(date)}. The briefs appear here once the paper is read. `:'')+(failed.length?'Couldn’t upload: '+failed.join(', ')+'.':'');
+  render();
+}
+
+function emptyState(){
+  return `${uploadPanel()}<section class="panel empty">
+    <div class="eyebrow">Getting started</div>
+    <h2>Upload today’s business paper, and this page fills itself.</h2>
+    <div class="steps">
+      <div><b>Morning</b>Drop the e-paper above, or share it with Claude in chat for an instant read. You get every headliner and inside-page story in two or three lines, with the sectors it moves.</div>
+      <div><b>Same day</b>Claude proposes one to three calls. Take or pass on each here; entry is the first price after 9:30 IST.</div>
+      <div><b>Every weekday</b>Prices refresh hourly in market hours, and live whenever you open this page. Calls close on target, stop-loss or horizon, and each one gets a short post-mortem.</div>
+    </div></section>`;
+}
+
+function story(n,i){
+  const id='h'+i,o=!!S.open[id];
+  const ups=(n.up||[]).map(s=>`<span class="chip up">▲ ${esc(s)}</span>`).join('');
+  const dns=(n.down||[]).map(s=>`<span class="chip dn">▼ ${esc(s)}</span>`).join('');
+  return `<article class="panel story">
+    <div class="meta"><span class="cat">${esc(n.cat)}</span>${n.page?`<span>·</span><span>Page ${esc(n.page)}</span>`:''}</div>
+    <h2>${esc(n.title)}</h2><p>${esc(n.brief)}</p>
+    ${ups||dns?`<div class="chips">${ups}${dns}</div>`:''}
+    ${o?`<div class="more">${n.full?`<div class="full">${esc(n.full)}</div>`:''}${n.why?`<div class="why"><span class="eyebrow">Why it matters for markets</span><span>${esc(n.why)}</span></div>`:''}</div>`:''}
+    <button class="linkbtn" data-toggle="${id}" aria-expanded="${o}">${o?'Hide full story':'Read full story'}</button>
+  </article>`;
+}
+function insideRow(n,i){
+  const id='i'+i,o=!!S.open[id];const t=n.tone==='up'?'t-up':n.tone==='down'?'t-dn':'t-flat';
+  return `<div class="row"><div class="meta"><span class="cat">${esc(n.cat)}</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><h3>${esc(n.title)}</h3><div class="brief">${esc(n.brief)}</div>
+    ${o&&(n.full||n.why)?`<div class="why">${n.full?`<span style="white-space:pre-line">${esc(n.full)}</span>`:''}${n.why?`<span><b>Why it matters:</b> ${esc(n.why)}</span>`:''}</div>`:''}
+    ${n.full||n.why?`<button class="linkbtn" data-toggle="${id}" aria-expanded="${o}" style="font-size:13px">${o?'Hide':'Read more'}</button>`:''}</div>
+    <div class="imp ${t}">${esc(n.impact||'')}</div></div>`;
+}
+function sectorRow(s){
+  const v=Math.max(-1,Math.min(1,+s.score||0)),w=Math.abs(v)*50,pos=v>=0;
+  return `<div class="srow"><span>${esc(s.name)}</span><div class="sbar"><i style="left:${pos?50:50-w}%;width:${w}%;background:var(${pos?'--up':'--dn'})"></i><b></b></div>
+    <span class="${v===0?'t-flat':pos?'t-up':'t-dn'}" style="font-size:12px;font-weight:500;text-align:right">${v===0?'Neutral':pos?'Positive':'Negative'}</span></div>`;
+}
+function refClose(name){
+  const d=S.days[0];if(!d)return null;
+  const p=(d.pulse||[]).find(x=>(x.name||'').toLowerCase().startsWith(name.toLowerCase()));
+  return p&&num(p.value)?p.value:null;
+}
+const LIVEMSG={
+  server_not_connected:'Live prices need the Bigdata.com connector. Add it in claude.ai Settings → Connectors, then reload.',
+  selection_required:'You have more than one Bigdata.com connection. Pick one when claude.ai asks, then reload.',
+  needs_reauth:'Your Bigdata.com connection has lapsed. Reconnect it in claude.ai Settings → Connectors, then reload.',
+  not_in_manifest:'Live prices are switched off for this page. Turn Bigdata.com back on from this page’s permissions menu.',
+  blocked_by_policy:'Your organisation’s settings block Bigdata.com on this page.',
+  approval_required:'Live prices need your OK to use Bigdata.com on this page.'
+};
+function liveStrip(){
+  if(!S.mcpTried||!S.mcp)return '';
+  const err=S.liveErr;
+  if(err&&err!=='stale'&&(LIVEMSG[err]||AUTHZ.includes(err))){
+    const m=LIVEMSG[err]||'Live prices aren’t available in this view.';
+    return `<section class="panel live"><div class="livehead"><span class="eyebrow">Live prices</span></div><div class="livewarn"><span>${esc(m)}</span>${err==='approval_required'?'<button class="btn" data-liveallow>Allow live prices</button>':''}</div></section>`;
+  }
+  const mk=MKT.map(([name])=>{const v=S.mkt&&S.mkt[name];const ref=refClose(name);const ch=v&&ref?v.value/ref-1:null;
+    return `<div><span class="eyebrow" style="font-size:11px">${esc(name)}</span><span class="v num">${v?fmtPx(v.value):'…'}</span><span class="sub num ${tone(ch)}">${ch!=null?pct(ch)+' vs paper':'&nbsp;'}</span></div>`}).join('');
+  const act=S.calls.filter(c=>!CLOSED.includes(c.status)&&bdId(c)).sort((a,b)=>(a.status==='Open'?0:1)-(b.status==='Open'?0:1));
+  const st=act.map(c=>{const q=S.live[symOf(c)];const p=perf(c);
+    return `<div><span class="eyebrow" style="font-size:11px">${esc(symOf(c))} · ${esc(c.dir)}${c.status!=='Open'?' · '+esc(c.status):''}</span><span class="v num">${q?fmtPx(q.price):'…'}</span><span class="sub num"><span class="${tone(q&&q.day)}">${q&&q.day!=null?pct(q.day)+' day':''}</span>${p.ret!=null?` · <span class="${tone(p.ret)}">${pct(p.ret)} call</span>`:num(c.entry)?'':' · no entry yet'}</span></div>`}).join('');
+  const tsAll=Object.values(S.live).map(q=>q.ts).filter(Boolean);
+  const latest=tsAll.length?Math.max(...tsAll):null;
+  return `<section class="panel live" aria-live="polite"><div class="livehead"><span class="eyebrow"><span class="dot" aria-hidden="true"></span>Live prices</span>
+    <span class="sub">${latest?'As of '+esc(fmtT(latest))+' IST · ':''}<a href="https://bigdata.com" target="_blank" rel="noopener" style="color:inherit">Bigdata.com</a> · stock quotes can lag about 15 minutes · refreshes every 5 min</span></div>
+    ${err==='stale'?'<div class="livewarn"><span>Couldn’t refresh just now. Showing the last prices received.</span></div>':''}
+    <div class="livegrid">${mk}</div>
+    ${st?`<div class="livegrid">${st}</div>`:''}
+    <span class="sub">“Call” is the return from entry in the call’s direction. The ledger’s official record (entries, stops, closes) is still set by the hourly tracker.</span></section>`;
+}
+function callCard(c){
+  const p=perf(c);
+  let foot;
+  if(c.status==='Proposed'){
+    foot=S.canEdit?`<div class="actions"><button class="btn primary" data-take="${esc(c._id)}">Take call</button><button class="btn" data-pass="${esc(c._id)}">Pass</button></div>`:`<div class="status t-flat">Awaiting a decision</div>`;
+  }else{
+    foot=`<div class="status ${statusTone(c.status)}">${esc(c.status==='Passed'?'Passed · still tracked':c.status)}${p.ret!=null?` · <span class="num ${tone(p.ret)}">${pct(p.ret)}</span>`:''}</div>`;
+  }
+  return `<div class="panel callcard"><div class="h"><div class="stock">${esc(c.stock)}</div><span class="dir ${esc(c.dir)}">${esc(c.dir)}</span></div>
+    <div style="font-size:14px;color:var(--ink2)">${esc(c.thesis)}</div>
+    <div class="kv num"><div><span>Entry</span><span>${num(c.entry)?fmtPx(c.entry):'after 9:30, '+short(c.date)}</span></div>
+      <div><span>Target / SL</span><span>${esc(c.targetText||'—')}</span></div><div><span>Horizon</span><span>${esc(c.horizon||'—')}</span></div></div>
+    <div style="font-size:12px;color:var(--muted)">Conviction ${esc(c.conv||'—')}${c.risk?` · Risk: ${esc(c.risk)}`:''}</div>${(()=>{const E=eff(c);return E.live?`<div class="sub num"><span class="dot" aria-hidden="true"></span>Live ${fmtPx(E.last)} · ${esc(fmtT(E.ts))}</div>`:''})()}${foot}</div>`;
+}
+function today(){
+  if(!S.days.length)return emptyState();
+  const d=S.days.find(x=>x._id===S.day)||S.days[0];
+  const calls=S.calls.filter(c=>c.date===d._id);
+  const opts=S.days.map(x=>`<option value="${esc(x._id)}"${x._id===d._id?' selected':''}>${fmtDate(x._id)}</option>`).join('');
+  const pulse=(d.pulse||[]).map(p=>`<div class="panel"><span class="eyebrow" style="font-size:11px">${esc(p.name)}</span><span class="v num">${num(p.value)?fmtPx(p.value):esc(p.value||'—')}</span><span class="c num ${tone(p.chg)}">${num(p.chg)?pct(p.chg)+' 1D':''}</span></div>`).join('');
+  return `<div class="dayhead"><div style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow">${esc(d.edition||'Business Standard')}</span><h1>${fmtDate(d._id)}</h1></div>
+      ${S.days.length>1?`<label for="daysel">Edition<select id="daysel">${opts}</select></label>`:''}</div>
+    ${d._id===(S.days[0]&&S.days[0]._id)?liveStrip():''}
+    ${pulse?`<span class="eyebrow">Previous close, from the paper</span><section class="pulse">${pulse}</section>`:''}
+    ${uploadPanel()}
+    <div class="cols"><div class="stack">
+      <div style="display:flex;flex-direction:column;gap:4px"><span class="eyebrow">The front page</span><span style="font-family:var(--serif);color:var(--muted)">Headliners in two or three lines. Open any story for the full read and why it matters.</span></div>
+      ${(d.head||[]).map(story).join('')||'<div class="note">No headliners logged for this edition.</div>'}
+      ${(d.inside||[]).length?`<span class="eyebrow" style="margin-top:8px">Inside the paper</span><div class="panel inside">${d.inside.map(insideRow).join('')}</div>`:''}
+    </div>
+    <aside class="stack">
+      ${d.read?`<div class="read"><span class="eyebrow">The market read</span><div class="line">${esc(d.read.line)}</div><div class="body">${esc(d.read.body)}</div></div>`:''}
+      ${(d.sectors||[]).length?`<div class="panel sectors"><span class="eyebrow">Sector impact today</span>${d.sectors.map(sectorRow).join('')}</div>`:''}
+      <span class="eyebrow">Calls from this edition</span>
+      ${calls.map(callCard).join('')||'<div class="note">No calls from this edition.</div>'}
+    </aside></div>`;
+}
+
+function ledger(){
+  const groups={All:c=>c.status!=='Proposed',Open:c=>c.status==='Open',Closed:c=>CLOSED.includes(c.status),Passed:c=>c.status==='Passed',Proposed:c=>c.status==='Proposed'};
+  const count=k=>S.calls.filter(groups[k]).length;
+  const rows=S.calls.filter(groups[S.filter]||groups.All).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const f=Object.keys(groups).filter(k=>k==='All'||count(k)).map(k=>`<button data-filter="${k}" aria-pressed="${S.filter===k}">${k} · ${count(k)}</button>`).join('');
+  const body=rows.map(c=>{const p=perf(c);const ex=S.expanded===c._id;
+    return `<tr class="clickable" data-expand="${esc(c._id)}" tabindex="0" aria-expanded="${ex}">
+      <td class="num" style="color:var(--muted);font-size:13px">${short(c.date)}</td>
+      <td><div style="font-weight:500">${esc(c.stock)}</div><div class="sub">${esc([c.symbol,c.sector].filter(Boolean).join(' · '))}</div></td>
+      <td><span class="dir ${esc(c.dir)}">${esc(c.dir)}</span></td>
+      <td class="trig">${esc(c.trigger||c.thesis)}</td>
+      <td class="r num">${fmtPx(c.entry)}</td><td class="r num">${(()=>{const E=eff(c);return fmtPx(E.last)+(E.live?`<div class="sub"><span class="dot" aria-hidden="true"></span>live ${esc(fmtT(E.ts))}</div>`:c.lastDate?`<div class="sub">${short(c.lastDate)}${c.lastTime?' '+esc(c.lastTime):''}</div>`:'')})()}</td>
+      <td class="r num" style="font-size:13px;color:var(--muted)">${esc(c.targetText||'—')}</td>
+      <td style="font-size:13px">${esc(c.horizon||'—')}</td>
+      <td class="r num ${tone(p.ret)}" style="font-weight:500">${pct(p.ret)}</td>
+      <td class="r num ${tone(p.alpha)}">${pct(p.alpha)}</td>
+      <td class="status ${statusTone(c.status)}">${esc(c.status)}</td></tr>
+      ${ex?`<tr class="detail"><td colspan="11"><div class="grid">
+        <div><div class="eyebrow">Thesis</div>${esc(c.thesis)}</div>
+        <div><div class="eyebrow">Risk to the call</div>${esc(c.risk||'—')}</div>
+        <div><div class="eyebrow">Nifty over the same days</div><span class="num ${tone(p.nifty)}">${pct(p.nifty)}</span>${c.lastDate?` <span class="sub">· prices as of ${short(c.lastDate)}</span>`:''}</div>
+        ${c.lesson?`<div><div class="eyebrow">Post-mortem</div>${esc(c.lesson)}</div>`:''}
+      </div></td></tr>`:''}`}).join('');
+  return `<div class="dayhead"><div style="display:flex;flex-direction:column;gap:6px"><h1>Every call, and what the market did with it</h1>
+      <span style="color:var(--muted)">Returns run from the entry price; open calls use the live price when it’s newer than the tracker’s. “vs Nifty” is the excess over the Nifty 50 across the same days. Select a row for the thesis and post-mortem.</span></div>
+      <div class="filters">${f}</div></div>
+    ${S.calls.length?`<div class="panel tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Call</th><th>Trigger in the news</th><th class="r">Entry</th><th class="r">Last</th><th class="r">Target / SL</th><th>Horizon</th><th class="r">Return</th><th class="r">vs Nifty</th><th>Status</th></tr></thead><tbody>${body||'<tr><td colspan="11" style="color:var(--muted)">Nothing in this view yet.</td></tr>'}</tbody></table></div>`:emptyState()}`;
+}
+
+function review(){
+  const taken=S.calls.filter(c=>c.status==='Open'||CLOSED.includes(c.status));
+  if(!taken.length&&!S.lessons.length)return `<div class="dayhead"><h1>Review</h1></div><div class="note">The scorecard starts once the first call is taken. Small samples mislead, so read it with care until there are 30 or more.</div>`;
+  const P=taken.map(c=>({c,p:perf(c)})).filter(x=>x.p.ret!=null);
+  const closed=P.filter(x=>CLOSED.includes(x.c.status));
+  const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:null;
+  const hits=closed.filter(x=>x.p.ret>0).length;
+  const passed=S.calls.filter(c=>c.status==='Passed').map(perf).filter(p=>p.ret!=null);
+  const kp=[
+    ['Calls taken',String(taken.length),`${taken.filter(c=>c.status==='Open').length} open · ${closed.length} closed`,''],
+    ['Hit rate',closed.length?Math.round(hits/closed.length*100)+'%':'—',closed.length?`${hits} of ${closed.length} closed in profit`:'no closed calls yet',closed.length?(hits/closed.length>=.5?'t-up':'t-dn'):''],
+    ['Avg return',pct(avg(P.map(x=>x.p.ret))),'per call, equal weight',tone(avg(P.map(x=>x.p.ret)))],
+    ['Alpha vs Nifty',pct(avg(P.map(x=>x.p.alpha).filter(num))),'avg excess per call',tone(avg(P.map(x=>x.p.alpha).filter(num)))],
+    ['Passed ideas',pct(avg(passed.map(p=>p.ret))),`${passed.length} skipped, if we had taken them`,'t-flat']
+  ].map(k=>`<div class="panel"><span class="eyebrow">${k[0]}</span><span class="v num ${k[3]}">${k[1]}</span><span class="n">${k[2]}</span></div>`).join('');
+  // paired bars: call return vs nifty per call
+  const items=P.slice().sort((a,b)=>(a.c.date||'').localeCompare(b.c.date||'')).slice(-14);
+  let chart='<div class="note">Charts appear once prices are logged.</div>';
+  if(items.length){
+    const vals=items.flatMap(x=>[x.p.ret,x.p.nifty==null?0:(x.c.dir==='LONG'?x.p.nifty:-x.p.nifty)]);
+    const m=Math.max(.02,...vals.map(Math.abs));const top=Math.ceil(m*100)/100;
+    const W=760,H=260,L=48,T=16,B=48,ch=H-T-B,zero=T+ch/2,sc=v=>v/top*(ch/2);
+    const gw=(W-L)/items.length,bw=Math.min(22,gw/3);
+    let g=`<line x1="${L}" x2="${W}" y1="${zero}" y2="${zero}" style="stroke:var(--dash)"/>`;
+    [top,top/2,-top/2,-top].forEach(v=>{const y=zero-sc(v);g+=`<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" style="stroke:var(--line2)"/><text x="${L-8}" y="${y+4}" text-anchor="end" font-size="11" style="fill:var(--muted);font-family:var(--mono)">${pct(v)}</text>`});
+    items.forEach((x,i)=>{const cx=L+gw*i+gw/2;const r=x.p.ret;const n=x.p.nifty==null?0:(x.c.dir==='LONG'?x.p.nifty:-x.p.nifty);
+      const bar=(v,xx,fill)=>{const h=Math.abs(sc(v));return `<rect x="${xx}" y="${v>=0?zero-h:zero}" width="${bw}" height="${Math.max(h,1)}" rx="2" style="fill:${fill}"/>`};
+      g+=bar(r,cx-bw-1,r>=0?'var(--up)':'var(--dn)')+bar(n,cx+1,'var(--faint)');
+      const lab=esc((x.c.symbol||x.c.stock||'').slice(0,10));
+      g+=`<text x="${cx}" y="${H-B+18}" text-anchor="middle" font-size="11" style="fill:var(--muted);font-family:var(--sans)">${lab}</text><text x="${cx}" y="${H-B+32}" text-anchor="middle" font-size="10" style="fill:var(--faint);font-family:var(--mono)">${short(x.c.date)}</text>`});
+    chart=`<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:520px" role="img" aria-label="Each call's return beside the Nifty's move over the same days">${g}</svg></div>`;
+  }
+  // by news type
+  const types={};closed.forEach(x=>{const k=x.c.newsType||'Other';types[k]=types[k]||{h:0,n:0};types[k].n++;if(x.p.ret>0)types[k].h++});
+  const trows=Object.entries(types).sort((a,b)=>b[1].n-a[1].n).map(([k,v])=>`<div class="srow" style="grid-template-columns:130px minmax(0,1fr) 56px"><span>${esc(k)}</span><div class="sbar" style="height:10px"><i style="left:0;height:10px;width:${v.h/v.n*100}%;background:var(--up)"></i></div><span class="num" style="text-align:right;font-size:13px">${v.h} / ${v.n}</span></div>`).join('');
+  const lessons=S.lessons.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(l=>`<article class="panel lesson"><span style="font-size:12px;color:var(--muted)">${esc(l.ref||'')}${l.date?' · '+short(l.date):''}</span><h3>${esc(l.h)}</h3><p>${esc(l.b)}</p></article>`).join('');
+  return `<div class="dayhead"><h1>How our reading of the news is doing</h1></div>
+    <section class="kpis">${kp}</section>
+    <div class="two"><div class="panel chartp"><h2>Each call against the Nifty</h2>
+      <div class="legend"><span><i style="background:var(--up)"></i>Call return (orange when negative)</span><span><i style="background:var(--faint)"></i>Nifty over the same days, in the call’s direction</span></div>${chart}</div>
+      <div class="panel chartp"><h2>Which kind of news pays</h2><span style="font-size:13px;color:var(--muted)">Closed calls in profit, by the type of story behind them</span>
+      ${trows||'<div class="note">Fills in as calls close.</div>'}<span style="font-size:12px;color:var(--muted);border-top:1px solid var(--line2);padding-top:12px">Read this after 30+ closed calls; before that it is mostly noise.</span></div></div>
+    <span class="eyebrow">What the market taught us</span>
+    ${lessons?`<div class="lessons">${lessons}</div>`:'<div class="note">Post-mortems appear here as calls close.</div>'}`;
+}
+
+/* ---- events ---- */
+document.querySelector('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(!b)return;S.tab=b.dataset.tab;try{localStorage.setItem('ml-tab',S.tab)}catch(_){}render();window.scrollTo(0,0)});
+$app.addEventListener('click',async e=>{
+  if(e.target.closest('#upgo')){doUpload();return}
+  const la=e.target.closest('[data-liveallow]');if(la){allowLive(la);return}
+  if(e.target.closest('[data-perms]')&&S.perms){S.perms.manage().then(async()=>{S.assetsState=await S.perms.state('assets').catch(()=>'unavailable');try{S.assets=await window.claude.use('assets')}catch(_){}render()}).catch(()=>toast('Open the Permissions menu from the page’s top bar.'));return}
+  const up=e.target.closest('[data-unpend]');if(up){S.pending.splice(+up.dataset.unpend,1);render();return}
+  const t=e.target.closest('[data-toggle]');if(t){S.open[t.dataset.toggle]=!S.open[t.dataset.toggle];render();return}
+  const f=e.target.closest('[data-filter]');if(f){S.filter=f.dataset.filter;render();return}
+  const x=e.target.closest('[data-expand]');if(x){S.expanded=S.expanded===x.dataset.expand?null:x.dataset.expand;render();return}
+  const tk=e.target.closest('[data-take],[data-pass]');
+  if(tk&&S.db){const id=tk.dataset.take||tk.dataset.pass;const st=tk.dataset.take?'Open':'Passed';
+    tk.disabled=true;
+    try{await S.db.doc('calls/'+id).update({status:st,decidedAt:new Date().toISOString()});toast(st==='Open'?'Call taken. Entry is the next price after 9:30 IST.':'Passed. Claude will still track it.')}
+    catch(err){tk.disabled=false;toast('Couldn’t save that. Try again in a moment.')}}
+});
+$app.addEventListener('change',e=>{if(e.target.id==='upfile'){addFiles(e.target.files);e.target.value=''}else if(e.target.id==='update'){S.upDate=e.target.value}});
+$app.addEventListener('dragover',e=>{const d=e.target.closest('#drop');if(d){e.preventDefault();d.classList.add('over')}});
+$app.addEventListener('dragleave',e=>{const d=e.target.closest('#drop');if(d)d.classList.remove('over')});
+$app.addEventListener('drop',e=>{const d=e.target.closest('#drop');if(d){e.preventDefault();addFiles(e.dataTransfer.files)}});
+document.getElementById('hdrUpload').addEventListener('click',()=>{S.tab='today';render();const u=document.getElementById('upload');if(u){u.scrollIntoView({block:'center'});const i=document.getElementById('upfile');if(i)i.focus()}});
+$app.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('tr[data-expand]')){e.preventDefault();e.target.click()}});
+$app.addEventListener('change',e=>{if(e.target.id==='daysel'){S.day=e.target.value;S.open={};render()}});
+
+/* ---- data ---- */
+render();
+(async()=>{
+  const cl=window.claude;
+  const db=cl&&cl.use?await cl.use('db'):null;
+  const user=cl&&cl.use?await cl.use('user'):null;
+  S.canEdit=user?await user.canEdit():false;
+  if(!db){S.ready=true;S.offline=true;render();return}
+  S.db=db;try{S.assets=await cl.use('assets')}catch(e){S.assets=null}
+  try{const pm=await cl.use('permissions');S.perms=pm;S.assetsState=pm?await pm.state('assets').catch(()=>'unavailable'):'unavailable'}catch(e){S.assetsState='unavailable'}
+  (async()=>{try{S.mcp=await cl.use('mcp')}catch(e){S.mcp=null}S.mcpTried=true;syncWatches();render()})();
+  let got=0;const done=()=>{if(++got>=4){S.ready=true}syncWatches();render()};
+  const sub=(col,key,sort)=>db.collection(col).onSnapshot(s=>{S[key]=s.docs.map(d=>Object.assign({_id:d.id},d.data()));if(sort)S[key].sort(sort);if(key==='days'&&!S.days.some(d=>d._id===S.day))S.day=S.days[0]?S.days[0]._id:null;done()},()=>{S.ready=true;render()});
+  sub('days','days',(a,b)=>b._id.localeCompare(a._id));
+  sub('calls','calls');
+  sub('lessons','lessons');
+  sub('uploads','uploads');
+})();
+})();
+</script>
