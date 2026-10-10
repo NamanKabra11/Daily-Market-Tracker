@@ -2,7 +2,7 @@
 
 A news-driven equity research and paper-trading method, packaged as a Claude skill.
 
-Share a business newspaper (PDF, photos, links or text) and Claude turns it into a
+Share a business news (PDF, photos, links or text) and Claude turns it into a
 market brief and rule-based stock calls, each tracked against the Nifty 50.
 
 ## How it works
@@ -17,7 +17,7 @@ market brief and rule-based stock calls, each tracked against the Nifty 50.
 ## Install
 1. Download `morning-ledger-skill.zip`.
 2. In Claude: Settings → Capabilities → Skills → Upload skill.
-3. Share a business newspaper in any chat.
+3. Share any business news in any chat.
 
 Paper trading for learning only. Not investment advice.
 
