@@ -1,4 +1,4 @@
-# Morning Ledger
+# Daily Market Ledger
 
 A news-driven equity research and paper-trading method, packaged as a Claude skill.
 
